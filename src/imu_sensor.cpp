@@ -5,7 +5,8 @@
 
 void ImuSensor::init() {
     Wire.begin(); 
-    
+    Wire.setClock(400000); //Wymuszenie trybu FAST dla I2C (~400 kHz)
+
     Wire.beginTransmission(MPU_ADDR);
     Wire.write(0x6B); // Rejestr zasilania PWR_MGMT_1
     Wire.write(0);    // Wybudzenie czujnika
@@ -28,8 +29,7 @@ void ImuSensor::readRawData(int16_t &rawX, int16_t &rawY, int16_t &rawZ) {
 }
 
 void ImuSensor::calculateAngles(float gX, float gY, float gZ) {
-    // atan2 zwraca wynik w radianach, dlatego mnożymy przez (180 / PI), 
-    // aby otrzymać czytelne dla kierowcy stopnie
+    // atan2 zwraca wynik w radianach, dlatego mnożymy przez (180 / PI), aby otrzymać stopnie
     roll = atan2(gY, gZ) * (180.0f / PI);
     pitch = atan2(-gX, sqrt(gY * gY + gZ * gZ)) * (180.0f / PI);
 }

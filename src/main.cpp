@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include "config.h"
 #include "imu_sensor.h"
+#include "i2c_benchmark.h"
 
-// Stworzenie obiektu czujnika
+// Inicjalizacja obiektów
 ImuSensor imu;
+Benchmark benchmark;
 
-// Zmienna do śledzenia upływu czasu (zamiast delay)
 unsigned long lastImuTime = 0;
 
 void setup() {
@@ -13,19 +14,25 @@ void setup() {
     imu.init();
     
     Serial.println("System gotowy. Rozpoczynam wyliczanie katow...");
+    Serial.println("Wpisz komende 'test' w terminalu, aby sprawdzic maksymalna predkosc odczytu.");
 }
 
 void loop() {
-    unsigned long currentTime = millis();
+    // 1. Przekazujemy sterowanie do modułu testowego
+    benchmark.process(imu);
 
-    // Odczyt co określony czas (20ms)
+    // 2. Jeśli test jest w toku, przerywamy pętlę, żeby nie śmiecić w terminalu zwykłymi kątami
+    if (benchmark.isActive()) {
+        return; 
+    }
+
+    // 3. --- STANDARDOWA PRACA URZĄDZENIA ---
+    unsigned long currentTime = millis();
     if (currentTime - lastImuTime >= IMU_READ_INTERVAL_MS) {
         lastImuTime = currentTime;
         
-        // Funkcja update robi wszystko pod maską (I2C + Matematyka)
         imu.update(); 
         
-        // Wyświetlanie wyników w terminalu
         Serial.print("Pitch (Przod/Tyl): ");
         Serial.print(imu.getPitch());
         Serial.print(" st. | Roll (Boki): ");
